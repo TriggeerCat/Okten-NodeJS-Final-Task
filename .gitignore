@@ -7,3 +7,6 @@ Dockerfile
 init-mongo.js
 nginx.conf
 
+client
+dist
+mongo
