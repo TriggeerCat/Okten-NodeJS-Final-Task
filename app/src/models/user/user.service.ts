@@ -4,6 +4,8 @@ import { STATUS_CODES } from "../../enums/status-codes.enum";
 import { IUser, IUserDealerCreateDTO, IUserCreateDTO } from "./user.interface";
 import { RoleEnum, ROLES } from "../../enums/role.enum";
 
+type TenantType = string | null;
+
 class UserService {
     // GET
     public getAll() {
@@ -44,43 +46,54 @@ class UserService {
     }
 
     // TENANT
-    public async makeTenant(id: string, tenant: string | null) {
+    public async makeTenant(id: string, tenant: TenantType) {
         if (!tenant) throw new ApiError("You are not a tenant", STATUS_CODES.forbidden);
         const user = await this.getById(id);
         if (user.tenant) throw new ApiError("User is already a tenant", STATUS_CODES.bad_request);
         return await UserModel.findByIdAndUpdate(id, { tenant }, { returnDocument: "after" });
     }
 
-    public async removeTenant(id: string) {
+    public async removeTenant(id: string, tenant: TenantType) {
         const user = await this.getById(id);
+
+        this.doesUserHaveTenantPermission(user, tenant);
         if (!user.tenant) throw new ApiError("User is already not a tenant", STATUS_CODES.bad_request);
+
         return await UserModel.findByIdAndUpdate(id, { tenant: null }, { returnDocument: "after" });
     }
 
     // PROMOTE
     public async promoteBuyerToSeller(id: string) {
-        if (await this.doesUserHaveRole(id, [ROLES.buyer]))
+        const user = await this.getById(id);
+        if (this.doesUserHaveRole(user, [ROLES.buyer]))
             return await UserModel.findByIdAndUpdate(id, { role: ROLES.seller }, { returnDocument: "after" });
         throw new ApiError("This users role isn't buyer", STATUS_CODES.bad_request);
     }
 
-    public async promoteToManager(id: string) {
-        if (await this.doesUserHaveRole(id, [ROLES.manager, ROLES.administrator]))
+    public async promoteToManager(id: string, tenant: TenantType) {
+        const user = await this.getById(id);
+
+        this.doesUserHaveTenantPermission(user, tenant);
+        if (this.doesUserHaveRole(user, [ROLES.manager, ROLES.administrator]))
             throw new ApiError("This user is already promoted", STATUS_CODES.bad_request);
+
         return await UserModel.findByIdAndUpdate(id, { role: ROLES.manager }, { returnDocument: "after" });
     }
 
-    public async demoteToBuyer(id: string) {
-        if (await this.doesUserHaveRole(id, [ROLES.administrator]))
+    public async demoteToBuyer(id: string, tenant: TenantType) {
+        const user = await this.getById(id);
+
+        this.doesUserHaveTenantPermission(user, tenant);
+        if (this.doesUserHaveRole(user, [ROLES.administrator]))
             throw new ApiError("You can't demote an administrator", STATUS_CODES.forbidden);
+
         return await UserModel.findByIdAndUpdate(id, { role: ROLES.buyer }, { returnDocument: "after" });
     }
 
     // BAN
-    public async setBanStatus(id: string, newBanStatus: boolean) {
-        const { isBanned } = await this.getById(id);
-        if (isBanned === newBanStatus)
-            throw new ApiError(`This user is already ${isBanned ? "banned" : "unbanned"}`, STATUS_CODES.bad_request);
+    public async setBanStatus(id: string, newBanStatus: boolean, tenant: TenantType) {
+        const user = await this.getById(id);
+        this.doesUserHaveTenantPermission(user, tenant);
         return await UserModel.findByIdAndUpdate(id, { isBanned: newBanStatus }, { returnDocument: "after" });
     }
 
@@ -96,9 +109,13 @@ class UserService {
         if (user) throw new ApiError("This email already exists", STATUS_CODES.forbidden);
     }
 
-    public async doesUserHaveRole(id: string, roles: RoleEnum[]) {
-        const { role } = await this.getById(id);
-        return roles.includes(role);
+    public doesUserHaveRole(user: IUser, roles: RoleEnum[]) {
+        return roles.includes(user.role);
+    }
+
+    public doesUserHaveTenantPermission(user: IUser, tenant: TenantType) {
+        if (tenant && user.tenant !== tenant)
+            throw new ApiError("This user does not belong to your tenancy", STATUS_CODES.bad_request);
     }
 }
 

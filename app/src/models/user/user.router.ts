@@ -41,7 +41,6 @@ router.patch(
     "/:id/tenant/remove",
     authMiddleware.checkAccessToken,
     commonMiddleware.validateRolePermissions(PERMS_USERS.tenant),
-    commonMiddleware.validateTenancy,
     commonMiddleware.validateId,
     userController.removeUserTenant
 );
@@ -58,7 +57,6 @@ router.patch(
     "/:id/promote/manager",
     authMiddleware.checkAccessToken,
     commonMiddleware.validateRolePermissions(PERMS_USERS.promote),
-    commonMiddleware.validateTenancy,
     commonMiddleware.validateId,
     userController.promoteUserToManager
 );
@@ -67,7 +65,6 @@ router.patch(
     "/:id/demote",
     authMiddleware.checkAccessToken,
     commonMiddleware.validateRolePermissions(PERMS_USERS.promote),
-    commonMiddleware.validateTenancy,
     commonMiddleware.validateId,
     userController.demoteUserToBuyer
 );
@@ -77,7 +74,6 @@ router.patch(
     "/:id/ban",
     authMiddleware.checkAccessToken,
     commonMiddleware.validateRolePermissions(PERMS_USERS.ban),
-    commonMiddleware.validateTenancy,
     commonMiddleware.validateId,
     userController.setUserBanStatus(true)
 );
@@ -86,7 +82,6 @@ router.patch(
     "/:id/unban",
     authMiddleware.checkAccessToken,
     commonMiddleware.validateRolePermissions(PERMS_USERS.ban),
-    commonMiddleware.validateTenancy,
     commonMiddleware.validateId,
     userController.setUserBanStatus(false)
 );

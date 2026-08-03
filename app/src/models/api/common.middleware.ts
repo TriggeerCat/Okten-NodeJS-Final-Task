@@ -7,8 +7,6 @@ import { ZodError, ZodObject } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { ROLE_PERMISSIONS, RoleEnum } from "../../enums/role.enum";
 import { PermissionsEnum } from "../../enums/permissions.enum";
-import { IParamsId } from "./req-res-types.interface";
-import { userService } from "../user/user.service";
 
 class CommonMiddleware {
     public validateId(req: Request, res: Response, next: NextFunction) {
@@ -59,16 +57,6 @@ class CommonMiddleware {
             }
             next();
         };
-    }
-
-    public async validateTenancy(req: Request<IParamsId>, res: Response, next: NextFunction) {
-        const { tenant } = tokenService.verifyToken(req.headers.authorization?.split(" ")[1] ?? " ", "access");
-        const user = await userService.getById(req.params.id);
-        if (tenant && user.tenant !== tenant) {
-            next(new ApiError("This user does not belong to that tenancy!", STATUS_CODES.bad_request));
-            return;
-        }
-        next();
     }
 }
 
