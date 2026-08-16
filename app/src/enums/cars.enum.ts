@@ -5,6 +5,13 @@
     toyota: "toyota"
 } as const;
 
+export const CAR_BRANDS_NAMES = {
+    [CAR_BRANDS.audi]: "Audi",
+    [CAR_BRANDS.bmw]: "BMW",
+    [CAR_BRANDS.mercedes_benz]: "Mercedes Benz",
+    [CAR_BRANDS.toyota]: "Toyota"
+} as const;
+
 export type CarBrandEnum = (typeof CAR_BRANDS)[keyof typeof CAR_BRANDS];
 
 export const CAR_MODELS: Record<CarBrandEnum, readonly string[]> = {
@@ -103,7 +110,7 @@ export const CAR_MODELS: Record<CarBrandEnum, readonly string[]> = {
         "eqa",
         "eqc",
         "eqs"
-    ],
+    ] as const,
 
     [CAR_BRANDS.toyota]: [
         "4Runner",
@@ -127,3 +134,5 @@ export const CAR_MODELS: Record<CarBrandEnum, readonly string[]> = {
         "Yaris"
     ] as const
 };
+
+export type CarModelEnum = (typeof CAR_MODELS)[CarBrandEnum][number];

@@ -3,7 +3,6 @@ import { userController } from "./user.controller";
 import { commonMiddleware } from "../api/common.middleware";
 import { UserValidator } from "./user.validator";
 import { authMiddleware } from "../auth/auth.middleware";
-import { PERMS_USERS } from "../../enums/permissions.enum";
 
 const router = Router();
 
@@ -32,7 +31,6 @@ router.patch(
 router.patch(
     "/:id/tenant/make",
     authMiddleware.checkAccessToken,
-    commonMiddleware.validateRolePermissions(PERMS_USERS.tenant),
     commonMiddleware.validateId,
     userController.makeUserTenant
 );
@@ -40,7 +38,6 @@ router.patch(
 router.patch(
     "/:id/tenant/remove",
     authMiddleware.checkAccessToken,
-    commonMiddleware.validateRolePermissions(PERMS_USERS.tenant),
     commonMiddleware.validateId,
     userController.removeUserTenant
 );
@@ -56,7 +53,6 @@ router.patch(
 router.patch(
     "/:id/promote/manager",
     authMiddleware.checkAccessToken,
-    commonMiddleware.validateRolePermissions(PERMS_USERS.promote),
     commonMiddleware.validateId,
     userController.promoteUserToManager
 );
@@ -64,7 +60,6 @@ router.patch(
 router.patch(
     "/:id/demote",
     authMiddleware.checkAccessToken,
-    commonMiddleware.validateRolePermissions(PERMS_USERS.promote),
     commonMiddleware.validateId,
     userController.demoteUserToBuyer
 );
@@ -73,7 +68,6 @@ router.patch(
 router.patch(
     "/:id/ban",
     authMiddleware.checkAccessToken,
-    commonMiddleware.validateRolePermissions(PERMS_USERS.ban),
     commonMiddleware.validateId,
     userController.setUserBanStatus(true)
 );
@@ -81,7 +75,6 @@ router.patch(
 router.patch(
     "/:id/unban",
     authMiddleware.checkAccessToken,
-    commonMiddleware.validateRolePermissions(PERMS_USERS.ban),
     commonMiddleware.validateId,
     userController.setUserBanStatus(false)
 );

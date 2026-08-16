@@ -28,7 +28,7 @@ class AuthController {
     public async refresh(req: Request, res: Response<any, ILocalsToken>) {
         const { userId, role, tenant } = res.locals.tokenPayload;
         const tokens = tokenService.generateAuthTokens({ userId, role, tenant });
-        await tokenService.create({ ...tokens, _userId: userId });
+        await tokenService.create({ ...tokens, userId: userId });
         res.status(STATUS_CODES.ok).json(tokens);
     }
 

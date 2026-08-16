@@ -32,14 +32,14 @@ class UserController {
 
     // TENANT
     public async makeUserTenant(req: Request<IParamsId>, res: Response) {
-        const { tenant } = tokenService.verifyToken(req.headers.authorization?.split(" ")[1] ?? " ", "access");
-        const updatedUser = await userService.makeTenant(req.params.id, tenant);
+        const { tenant, role } = tokenService.verifyToken(req.headers.authorization?.split(" ")[1] ?? " ", "access");
+        const updatedUser = await userService.makeTenant(req.params.id, tenant, role);
         res.status(STATUS_CODES.ok).json(updatedUser);
     }
 
     public async removeUserTenant(req: Request<IParamsId>, res: Response) {
-        const { tenant } = tokenService.verifyToken(req.headers.authorization?.split(" ")[1] ?? " ", "access");
-        const updatedUser = await userService.removeTenant(req.params.id, tenant);
+        const { tenant, role } = tokenService.verifyToken(req.headers.authorization?.split(" ")[1] ?? " ", "access");
+        const updatedUser = await userService.removeTenant(req.params.id, tenant, role);
         res.status(STATUS_CODES.ok).json(updatedUser);
     }
 
@@ -50,22 +50,25 @@ class UserController {
     }
 
     public async promoteUserToManager(req: Request<IParamsId>, res: Response) {
-        const { tenant } = tokenService.verifyToken(req.headers.authorization?.split(" ")[1] ?? " ", "access");
-        const updatedUser = await userService.promoteToManager(req.params.id, tenant);
+        const { tenant, role } = tokenService.verifyToken(req.headers.authorization?.split(" ")[1] ?? " ", "access");
+        const updatedUser = await userService.promoteToManager(req.params.id, tenant, role);
         res.status(STATUS_CODES.ok).json(updatedUser);
     }
 
     public async demoteUserToBuyer(req: Request<IParamsId>, res: Response) {
-        const { tenant } = tokenService.verifyToken(req.headers.authorization?.split(" ")[1] ?? " ", "access");
-        const updatedUser = await userService.demoteToBuyer(req.params.id, tenant);
+        const { tenant, role } = tokenService.verifyToken(req.headers.authorization?.split(" ")[1] ?? " ", "access");
+        const updatedUser = await userService.demoteToBuyer(req.params.id, tenant, role);
         res.status(STATUS_CODES.ok).json(updatedUser);
     }
 
     // BAN
     public setUserBanStatus(banStatus: boolean) {
         return async (req: Request<IParamsId>, res: Response) => {
-            const { tenant } = tokenService.verifyToken(req.headers.authorization?.split(" ")[1] ?? " ", "access");
-            const updatedUser = await userService.setBanStatus(req.params.id, banStatus, tenant);
+            const { tenant, role } = tokenService.verifyToken(
+                req.headers.authorization?.split(" ")[1] ?? " ",
+                "access"
+            );
+            const updatedUser = await userService.setBanStatus(req.params.id, banStatus, tenant, role);
             res.status(STATUS_CODES.ok).json(updatedUser);
         };
     }

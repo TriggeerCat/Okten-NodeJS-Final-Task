@@ -2,7 +2,9 @@
 import { ApiError } from "../api/api.error";
 import { STATUS_CODES } from "../../enums/status-codes.enum";
 import { IUser, IUserDealerCreateDTO, IUserCreateDTO } from "./user.interface";
-import { RoleEnum, ROLES } from "../../enums/role.enum";
+import { ROLE_PERMISSIONS, RoleEnum, ROLES } from "../../enums/role.enum";
+import { PermissionsEnum, PERMS_USERS } from "../../enums/permissions.enum";
+import { tokenService } from "../token/token.service";
 
 type TenantType = string | null;
 
@@ -46,17 +48,21 @@ class UserService {
     }
 
     // TENANT
-    public async makeTenant(id: string, tenant: TenantType) {
+    public async makeTenant(id: string, tenant: TenantType, clientsRole: RoleEnum) {
         if (!tenant) throw new ApiError("You are not a tenant", STATUS_CODES.forbidden);
+        this.validateRolePermissions(clientsRole, PERMS_USERS.tenant);
+
         const user = await this.getById(id);
         if (user.tenant) throw new ApiError("User is already a tenant", STATUS_CODES.bad_request);
         return await UserModel.findByIdAndUpdate(id, { tenant }, { returnDocument: "after" });
     }
 
-    public async removeTenant(id: string, tenant: TenantType) {
+    public async removeTenant(id: string, tenant: TenantType, clientsRole: RoleEnum) {
+        this.validateRolePermissions(clientsRole, PERMS_USERS.tenant);
+
         const user = await this.getById(id);
 
-        this.doesUserHaveTenantPermission(user, tenant);
+        this.validateTenant(user, tenant);
         if (!user.tenant) throw new ApiError("User is already not a tenant", STATUS_CODES.bad_request);
 
         return await UserModel.findByIdAndUpdate(id, { tenant: null }, { returnDocument: "after" });
@@ -70,20 +76,24 @@ class UserService {
         throw new ApiError("This users role isn't buyer", STATUS_CODES.bad_request);
     }
 
-    public async promoteToManager(id: string, tenant: TenantType) {
+    public async promoteToManager(id: string, tenant: TenantType, clientsRole: RoleEnum) {
+        this.validateRolePermissions(clientsRole, PERMS_USERS.promote);
+
         const user = await this.getById(id);
 
-        this.doesUserHaveTenantPermission(user, tenant);
+        this.validateTenant(user, tenant);
         if (this.doesUserHaveRole(user, [ROLES.manager, ROLES.administrator]))
             throw new ApiError("This user is already promoted", STATUS_CODES.bad_request);
 
         return await UserModel.findByIdAndUpdate(id, { role: ROLES.manager }, { returnDocument: "after" });
     }
 
-    public async demoteToBuyer(id: string, tenant: TenantType) {
+    public async demoteToBuyer(id: string, tenant: TenantType, clientsRole: RoleEnum) {
+        this.validateRolePermissions(clientsRole, PERMS_USERS.promote);
+
         const user = await this.getById(id);
 
-        this.doesUserHaveTenantPermission(user, tenant);
+        this.validateTenant(user, tenant);
         if (this.doesUserHaveRole(user, [ROLES.administrator]))
             throw new ApiError("You can't demote an administrator", STATUS_CODES.forbidden);
 
@@ -91,9 +101,11 @@ class UserService {
     }
 
     // BAN
-    public async setBanStatus(id: string, newBanStatus: boolean, tenant: TenantType) {
+    public async setBanStatus(id: string, newBanStatus: boolean, tenant: TenantType, clientsRole: RoleEnum) {
+        this.validateRolePermissions(clientsRole, PERMS_USERS.ban);
         const user = await this.getById(id);
-        this.doesUserHaveTenantPermission(user, tenant);
+        this.validateTenant(user, tenant);
+        if (newBanStatus) await tokenService.delete({ userId: id });
         return await UserModel.findByIdAndUpdate(id, { isBanned: newBanStatus }, { returnDocument: "after" });
     }
 
@@ -113,9 +125,14 @@ class UserService {
         return roles.includes(user.role);
     }
 
-    public doesUserHaveTenantPermission(user: IUser, tenant: TenantType) {
+    public validateTenant(user: IUser, tenant: TenantType) {
         if (tenant && user.tenant !== tenant)
             throw new ApiError("This user does not belong to your tenancy", STATUS_CODES.bad_request);
+    }
+
+    public validateRolePermissions(role: RoleEnum, permission: PermissionsEnum) {
+        if (!ROLE_PERMISSIONS[role].includes(permission))
+            throw new ApiError("Role does not have that permission!", STATUS_CODES.bad_request);
     }
 }
 

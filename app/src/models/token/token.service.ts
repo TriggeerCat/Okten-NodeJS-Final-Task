@@ -7,12 +7,16 @@ import { ApiError } from "../api/api.error";
 import { STATUS_CODES } from "../../enums/status-codes.enum";
 
 class TokenService {
+    public getByParams(params: Partial<ITokens>) {
+        return TokenModel.findOne(params);
+    }
+
     public create(dto: ITokensDTO) {
         return TokenModel.create(dto);
     }
 
-    public findByParams(params: Partial<ITokens>) {
-        return TokenModel.findOne(params);
+    public delete(params: Partial<ITokens>) {
+        return TokenModel.findOneAndDelete(params);
     }
 
     public generateAuthTokens(payload: ITokenPayload): ITokenPair {
@@ -37,9 +41,9 @@ class TokenService {
     public async doesTokenExist(token: string, type: AuthTokens) {
         switch (type) {
             case "access":
-                return !!(await this.findByParams({ accessToken: token }));
+                return !!(await this.getByParams({ accessToken: token }));
             case "refresh":
-                return !!(await this.findByParams({ refreshToken: token }));
+                return !!(await this.getByParams({ refreshToken: token }));
             default:
                 throw new ApiError("Invalid token type", STATUS_CODES.bad_request);
         }
