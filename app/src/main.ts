@@ -4,8 +4,11 @@ import express, { NextFunction, Request, Response } from "express";
 
 import { connectToDB } from "./db/mongoose";
 import envData from "./env/env";
-import { ApiError } from "./models/api/api.error";
-import { apiRouter } from "./models/api/api.router";
+import { ApiError } from "./features/api/api.error";
+import { apiRouter } from "./features/api/api.router";
+import { currencyService } from "./features/notice/features/currency/currency.service";
+import { cronStarter } from "./cron";
+import { tokenService } from "./features/token/token.service";
 
 const app = express();
 
@@ -38,4 +41,8 @@ const start = async () => {
     }
 };
 
-start().then();
+start().then(async () => {
+    await currencyService.refillExchange();
+    await tokenService.deleteExpiredTokens();
+    await cronStarter();
+});

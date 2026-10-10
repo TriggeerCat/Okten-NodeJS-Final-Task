@@ -1,0 +1,15 @@
+﻿.div {
+    padding: 24px;
+    background-color: #1e293b;
+    border-radius: 12px;
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1.6;
+    text-align: center;
+}
+
+.username {
+    color: #60a5fa;
+    font-weight: bold;
+}
