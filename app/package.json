@@ -1,34 +1,38 @@
 {
   "name": "app",
   "version": "1.0.0",
-  "main": "src/main.ts",
+  "main": "dist/main.js",
   "scripts": {
-    "dev": "rimraf dist && tsc-watch --onSuccess \"npm run watch:server\"",
-    "watch:server": "ts-node src/main.ts --watch"
+    "dev": "rimraf dist && tsc-watch --onSuccess \"node dist/main.js\"",
+    "build": "rimraf dist && tsc",
+    "start": "node dist/main.js",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "typecheck": "tsc --noEmit"
   },
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
     "cron": "^4.4.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.1",
     "handlebars": "^4.7.9",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "juice": "^12.1.2",
     "mongoose": "^9.7.4",
     "nodemailer": "^9.0.5",
     "obscenity": "^0.4.6",
-    "rimraf": "^6.1.3",
-    "typescript": "^6.0.3",
     "zod": "^4.4.3",
     "zod-validation-error": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
     "@types/bcrypt": "^6.0.0",
-    "@types/cron": "^2.0.1",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/handlebars": "^4.0.40",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.8.0",
     "@types/nodemailer": "^8.0.1",
@@ -39,8 +43,9 @@
     "globals": "^17.7.0",
     "jiti": "^2.7.0",
     "prettier": "3.9.5",
-    "ts-node": "^10.9.2",
+    "rimraf": "^6.1.3",
     "tsc-watch": "^7.2.1",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.64.0"
   }
 }

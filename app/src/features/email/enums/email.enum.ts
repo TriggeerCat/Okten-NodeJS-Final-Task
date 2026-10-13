@@ -3,7 +3,8 @@ import { TEMPLATE_PATH } from "./templates.enum";
 
 export const EMAIL = {
     welcome: "welcome",
-    warning: "warning"
+    warning: "warning",
+    missingCatalog: "missingCatalog"
 } as const;
 
 type EmailEnum = (typeof EMAIL)[keyof typeof EMAIL];
@@ -16,5 +17,9 @@ export const EMAIL_TEMPLATE = {
     [EMAIL.warning]: {
         subject: "Notice flagged for check",
         templatePath: TEMPLATE_PATH.warning
+    },
+    [EMAIL.missingCatalog]: {
+        subject: "Missing brand or model reported",
+        templatePath: TEMPLATE_PATH.missingCatalog
     }
 } as const satisfies Record<EmailEnum, IEmailTemplate>;

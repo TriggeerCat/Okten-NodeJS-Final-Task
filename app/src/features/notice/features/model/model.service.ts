@@ -1,23 +1,27 @@
 ﻿import { ModelModel } from "./model.model";
+import { ApiError } from "../../../api/api.error";
+import { STATUS_CODES } from "../../../../enums/status-codes.enum";
 
 class ModelService {
     // GET
-    public getAll() {
-        return ModelModel.find();
+    public getAllByBrand(brandId: string) {
+        return ModelModel.find({ brandId }).sort({ model: 1 });
     }
 
-    public getOne(model: string) {
-        return ModelModel.findOne({ model });
+    public getOne(brandId: string, model: string) {
+        return ModelModel.findOne({ brandId, model });
     }
 
     // CREATE
-    public create(model: string, brandId: string) {
-        return ModelModel.create({ model, brandId });
+    public async create(brandId: string, model: string) {
+        if (await ModelModel.exists({ brandId, model }))
+            throw new ApiError("This model already exists", STATUS_CODES.conflict);
+        return await ModelModel.create({ brandId, model });
     }
 
     // DELETE
-    public async delete(model: string) {
-        return await ModelModel.findOneAndDelete({ model }, { returnDocument: "after" });
+    public async delete(brandId: string, model: string) {
+        return await ModelModel.findOneAndDelete({ brandId, model });
     }
 }
 

@@ -2,9 +2,9 @@
 import { IUserAuthDTO, IUserCreateDTO, IUserDealerCreateDTO } from "../user.interface";
 import { authService } from "./auth.service";
 import { STATUS_CODES } from "../../../enums/status-codes.enum";
-import { tokenService } from "../../token/token.service";
 import { userService } from "../user.service";
 import { ILocalsToken } from "../../api/req-res-types.interface";
+import { IRefreshToken } from "../../token/token.interface";
 
 class AuthController {
     public async signUpUser(req: Request, res: Response) {
@@ -26,10 +26,19 @@ class AuthController {
     }
 
     public async refresh(req: Request, res: Response<any, ILocalsToken>) {
-        const { userId, role, tenant } = res.locals.tokenPayload;
-        const tokens = tokenService.generateAuthTokens({ userId, role, tenant });
-        await tokenService.create({ ...tokens, userId: userId });
+        const { refreshToken } = req.body as IRefreshToken;
+        const tokens = await authService.refresh(res.locals.tokenPayload.userId, refreshToken);
         res.status(STATUS_CODES.ok).json(tokens);
+    }
+
+    public async signOut(req: Request, res: Response<any, ILocalsToken & { accessToken: string }>) {
+        await authService.signOut(res.locals.accessToken);
+        res.status(STATUS_CODES.no_content).end();
+    }
+
+    public async signOutEverywhere(req: Request, res: Response<any, ILocalsToken>) {
+        await authService.signOutEverywhere(res.locals.tokenPayload.userId);
+        res.status(STATUS_CODES.no_content).end();
     }
 
     public async me(req: Request, res: Response<any, ILocalsToken>) {

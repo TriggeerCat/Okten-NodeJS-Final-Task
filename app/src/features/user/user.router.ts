@@ -3,11 +3,19 @@ import { userController } from "./user.controller";
 import { commonMiddleware } from "../api/common.middleware";
 import { UserValidator } from "./user.validator";
 import { authMiddleware } from "./auth/auth.middleware";
+import { PERMS_USERS } from "../../enums/permissions.enum";
+import { paginationQuery } from "../api/pagination";
 
 const router = Router();
 
 // GET
-router.get("/", userController.getAll);
+router.get(
+    "/",
+    authMiddleware.checkAccessToken,
+    authMiddleware.requirePermission(PERMS_USERS.read),
+    commonMiddleware.validate(paginationQuery, "query"),
+    userController.getAll
+);
 router.get("/:id", commonMiddleware.validateId, userController.getOne);
 
 // UPDATE
@@ -27,7 +35,21 @@ router.patch(
     userController.upgradeToPremium
 );
 
+router.post(
+    "/premium/purchase",
+    authMiddleware.checkAccessToken,
+    commonMiddleware.validate(UserValidator.purchasePremium, "body"),
+    userController.purchasePremium
+);
+
 // TENANT
+router.post(
+    "/tenant/request",
+    authMiddleware.checkAccessToken,
+    commonMiddleware.validate(UserValidator.tenantRequest, "body"),
+    userController.requestTenant
+);
+
 router.patch(
     "/:id/tenant/make",
     authMiddleware.checkAccessToken,

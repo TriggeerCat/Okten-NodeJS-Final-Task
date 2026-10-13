@@ -1,4 +1,4 @@
-﻿import { PERMS_NOTICE, PERMS_USERS } from "../../notice/enums/permissions.enum";
+﻿import { PERMS_CATALOG, PERMS_NOTICE, PERMS_USERS, PermissionsEnum } from "../../../enums/permissions.enum";
 
 export const ROLES = {
     buyer: "buyer",
@@ -9,9 +9,27 @@ export const ROLES = {
 
 export type RoleEnum = (typeof ROLES)[keyof typeof ROLES];
 
-export const ROLE_PERMISSIONS: Record<string, string[]> = {
-    [ROLES.buyer]: [":3"],
+export const ROLE_PERMISSIONS: Record<RoleEnum, readonly PermissionsEnum[]> = {
+    [ROLES.buyer]: [],
     [ROLES.seller]: [PERMS_NOTICE.create],
-    [ROLES.manager]: [PERMS_NOTICE.create, PERMS_USERS.ban, PERMS_USERS.tenant],
-    [ROLES.administrator]: [PERMS_NOTICE.create, PERMS_USERS.ban, PERMS_USERS.promote, PERMS_USERS.tenant]
-} as const satisfies Record<RoleEnum, string[]>;
+    [ROLES.manager]: [
+        PERMS_NOTICE.create,
+        PERMS_NOTICE.update,
+        PERMS_NOTICE.delete,
+        PERMS_USERS.read,
+        PERMS_USERS.ban,
+        PERMS_USERS.tenant
+    ],
+    [ROLES.administrator]: [
+        PERMS_NOTICE.create,
+        PERMS_NOTICE.update,
+        PERMS_NOTICE.delete,
+        PERMS_USERS.read,
+        PERMS_USERS.ban,
+        PERMS_USERS.promote,
+        PERMS_USERS.tenant,
+        PERMS_USERS.delete,
+        PERMS_USERS.premium,
+        PERMS_CATALOG.create
+    ]
+};

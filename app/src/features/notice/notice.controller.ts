@@ -1,15 +1,26 @@
 ﻿import { Request, Response } from "express";
 import { STATUS_CODES } from "../../enums/status-codes.enum";
 import { noticeService } from "./notice.service";
-import { INotice, INoticeCreateDTO } from "./notice.interface";
-import { tokenService } from "../token/token.service";
-import { IParamsId, IParamsRegion } from "../api/req-res-types.interface";
-import { NoticeModel } from "./notice.model";
+import {
+    INoticeCreateDTO,
+    INoticeModerationQuery,
+    INoticeQuery,
+    INoticeUpdateDTO,
+    IPremiumPricesQuery
+} from "./notice.interface";
+import { ILocalsQuery, ILocalsToken, ILocalsTokenQuery, IParamsId } from "../api/req-res-types.interface";
+import { IPaginationQuery } from "../api/pagination";
+import { RegionsEnum } from "./enums/regions.enum";
 
 class NoticeController {
     // GET
-    public async getAll(req: Request, res: Response) {
-        const notices = await noticeService.getAll();
+    public async getAll(req: Request, res: Response<any, ILocalsQuery<INoticeQuery>>) {
+        const notices = await noticeService.getAll(res.locals.validQuery);
+        res.status(STATUS_CODES.ok).json(notices);
+    }
+
+    public async getMy(req: Request, res: Response<any, ILocalsTokenQuery<IPaginationQuery>>) {
+        const notices = await noticeService.getMy(res.locals.tokenPayload, res.locals.validQuery);
         res.status(STATUS_CODES.ok).json(notices);
     }
 
@@ -18,69 +29,71 @@ class NoticeController {
         res.status(STATUS_CODES.ok).json(notice);
     }
 
-    public async getManyByRegion(req: Request<IParamsRegion>, res: Response) {
-        const notice = await noticeService.getByRegion(req.params.region);
+    public async getManyByRegion(
+        req: Request<{ region: RegionsEnum }>,
+        res: Response<any, ILocalsQuery<IPaginationQuery>>
+    ) {
+        const notices = await noticeService.getByRegion(req.params.region, res.locals.validQuery);
+        res.status(STATUS_CODES.ok).json(notices);
+    }
+
+    public async getManaged(req: Request<IParamsId>, res: Response<any, ILocalsToken>) {
+        const notice = await noticeService.getManaged(req.params.id, res.locals.tokenPayload);
         res.status(STATUS_CODES.ok).json(notice);
     }
 
-    public async getPremiumViews(req: Request<IParamsId>, res: Response) {
-        const { userId } = tokenService.verifyToken(req.headers.authorization?.split(" ")[1] ?? " ", "access");
-        const views = await noticeService.getPremiumViews(req.params.id, userId);
+    public async getModeration(req: Request, res: Response<any, ILocalsTokenQuery<INoticeModerationQuery>>) {
+        const notices = await noticeService.getModeration(res.locals.validQuery, res.locals.tokenPayload);
+        res.status(STATUS_CODES.ok).json(notices);
+    }
+
+    public async getPremiumStats(req: Request<IParamsId>, res: Response<any, ILocalsToken>) {
+        const stats = await noticeService.getPremiumStats(req.params.id, res.locals.tokenPayload);
+        res.status(STATUS_CODES.ok).json(stats);
+    }
+
+    public async getPremiumViews(req: Request<IParamsId>, res: Response<any, ILocalsToken>) {
+        const views = await noticeService.getPremiumViews(req.params.id, res.locals.tokenPayload);
         res.status(STATUS_CODES.ok).json(views);
     }
 
-    public async getPremiumAvgPrices(req: Request<IParamsRegion>, res: Response) {
-        const { userId } = tokenService.verifyToken(req.headers.authorization?.split(" ")[1] ?? " ", "access");
-        const prices = await noticeService.getPremiumAvgPrices(req.body.model, req.body.region, userId);
+    public async getPremiumAvgPrices(req: Request, res: Response<any, ILocalsTokenQuery<IPremiumPricesQuery>>) {
+        const prices = await noticeService.getPremiumAvgPrices(res.locals.validQuery, res.locals.tokenPayload);
         res.status(STATUS_CODES.ok).json(prices);
     }
 
     // CREATE
-    public async createNotice(req: Request, res: Response) {
-        const tokenPayload = tokenService.verifyToken(req.headers.authorization?.split(" ")[1] ?? " ", "access");
-        const id = tokenPayload.userId;
-
+    public async createNotice(req: Request, res: Response<any, ILocalsToken>) {
         const data: INoticeCreateDTO = req.body;
-        const notice = await noticeService.create(data, id);
-        res.status(STATUS_CODES.ok).json(notice);
+        const notice = await noticeService.create(data, res.locals.tokenPayload);
+        res.status(STATUS_CODES.created).json(notice);
     }
 
     // UPDATE
-    public async updateNotice(req: Request<IParamsId>, res: Response) {
-        const notice: Partial<INotice> = req.body;
-        const updatedNotice = await noticeService.updateById(req.params.id, notice);
+    public async updateNotice(req: Request<IParamsId>, res: Response<any, ILocalsToken>) {
+        const notice: INoticeUpdateDTO = req.body;
+        const updatedNotice = await noticeService.updateById(req.params.id, notice, res.locals.tokenPayload);
         res.status(STATUS_CODES.ok).json(updatedNotice);
     }
 
-    public async updateDescription(req: Request<IParamsId>, res: Response) {
-        const updatedNotice = await noticeService.updateDescription(req.params.id, req.body.decription);
+    public async updateDescription(req: Request<IParamsId>, res: Response<any, ILocalsToken>) {
+        const updatedNotice = await noticeService.updateDescription(
+            req.params.id,
+            req.body.description,
+            res.locals.tokenPayload
+        );
         res.status(STATUS_CODES.ok).json(updatedNotice);
+    }
+
+    public async activate(req: Request<IParamsId>, res: Response<any, ILocalsToken>) {
+        const notice = await noticeService.activate(req.params.id, res.locals.tokenPayload);
+        res.status(STATUS_CODES.ok).json(notice);
     }
 
     // DELETE
-    public async delete(req: Request<IParamsId>, res: Response) {
-        await noticeService.delete(req.params.id);
+    public async delete(req: Request<IParamsId>, res: Response<any, ILocalsToken>) {
+        await noticeService.delete(req.params.id, res.locals.tokenPayload);
         res.status(STATUS_CODES.no_content).end();
-    }
-
-    // DEBUG
-    public async debugFillViews(req: Request<IParamsId>, res: Response) {
-        const id = req.params.id;
-        const updatedNotice = await NoticeModel.findByIdAndUpdate(
-            id,
-            {
-                views: [
-                    new Date(), // зараз
-                    new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 годин тому
-                    new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 день тому
-                    new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), // 6 днів тому
-                    new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 14 днів тому
-                    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 1 місяць тому
-                ]
-            },
-            { returnDocument: "after" }
-        );
-        res.status(STATUS_CODES.ok).json(updatedNotice);
     }
 }
 

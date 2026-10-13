@@ -16,11 +16,12 @@ export const getSecretByTokenType = (tokenType: AuthTokens) => {
     }
 };
 
+// jsonwebtoken expects seconds, env stores milliseconds
 export const getLifetimeByTokenType = (tokenType: AuthTokens) => {
     switch (tokenType) {
         case AUTH_TOKEN_ENUM.access:
-            return envData.JWT_ACCESS_LIFETIME;
+            return Math.floor(envData.JWT_ACCESS_LIFETIME / 1000);
         case AUTH_TOKEN_ENUM.refresh:
-            return envData.JWT_REFRESH_LIFETIME;
+            return Math.floor(envData.JWT_REFRESH_LIFETIME / 1000);
     }
 };

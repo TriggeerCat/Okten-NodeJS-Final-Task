@@ -1,5 +1,12 @@
-﻿import { ROLE_PERMISSIONS, RoleEnum, ROLES } from "../features/user/enums/role.enum";
-import { PermissionsEnum } from "../features/notice/enums/permissions.enum";
+﻿import { ROLE_PERMISSIONS, RoleEnum } from "../features/user/enums/role.enum";
+import { PermissionsEnum } from "../enums/permissions.enum";
+import { ApiError } from "../features/api/api.error";
+import { STATUS_CODES } from "../enums/status-codes.enum";
 
 export const hasRolePermission = (role: RoleEnum, permission: PermissionsEnum) =>
-    ROLE_PERMISSIONS[role ?? ROLES.buyer].includes(permission);
+    ROLE_PERMISSIONS[role]?.includes(permission) ?? false;
+
+export const assertRolePermission = (role: RoleEnum, permission: PermissionsEnum) => {
+    if (!hasRolePermission(role, permission))
+        throw new ApiError("Role does not have that permission", STATUS_CODES.forbidden);
+};
